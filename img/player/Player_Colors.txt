@@ -1,0 +1,23 @@
+Uniform: Clear -> Dark
+D87474
+AD5858
+984C4C
+964B4B (few pixels)
+824040
+
+Goggles: Clear -> Dark
+EAEBC7
+D2D2A4
+9A9975
+
+Backpack: Clear -> Dark
+55768A
+506179
+3F5065
+
+Weapon: Clear -> Dark
+
+4A4A4A
+3D3D3D
+363636
+2B2B2B
