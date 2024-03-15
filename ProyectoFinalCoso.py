@@ -1,7 +1,10 @@
 import pygame
 import os
 import csv
+import button
+import subprocess
 import random
+
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 os.chdir(script_dir)
@@ -20,13 +23,14 @@ SCREEN_HEIGHT = 600
 GRAVEDAD = 0.65
 Rows = 16
 Columns = 150
+NMAX_NIV = 3
 TILE_SZ = SCREEN_HEIGHT // Rows
 Tyle_types = 65
 Level = 0
 screen_scroll = 0
 SCROLL_THRESH = 200
 bg_scroll = 0
-start_game = True
+start_game = False
 
 
 #ventana
@@ -44,6 +48,13 @@ disparando = False
 grenade = False
 Gran_Lanzada = False
 
+#imagenes botones
+boton_start = pygame.image.load('./img/start_btn.png').convert_alpha()
+boton_start = pygame.transform.scale(boton_start, (200, 100))
+boton_editor = pygame.image.load('./img/restart_btn.png').convert_alpha()
+boton_editor = pygame.transform.scale(boton_editor, (200, 100))
+boton_exit = pygame.image.load('./img/exit_btn.png').convert_alpha()
+boton_exit = pygame.transform.scale(boton_exit, (200, 100))
 #cargar imagenes
 bg_one = pygame.image.load('./img/Background/plx-1.png').convert_alpha()
 bg_two = pygame.image.load('./img/Background/plx-2.png').convert_alpha()
@@ -96,6 +107,30 @@ def draw_bg():
         ventana.blit(bg_four_scaled, ((x * width) - bg_scroll * 0.8, 0))
         ventana.blit(bg_five_scaled, ((x * width) - bg_scroll * 0.9, 0))
 
+#hacer reset del nivel
+def reset_level():
+    grupo_balas.empty()
+    grupo_granadas.empty()
+    grupo_explosiones.empty()
+    grupo_enemigos.empty()
+    grupo_item_list.empty()
+    grupo_deco.empty()
+    grupo_agua.empty()
+    grupo_salida.empty()
+    grupo_spikes.empty()
+    grupo_lava.empty()
+
+    #CREAR NIVEL VACIO
+    Data = []
+    for row in range(Rows):
+        r = [-1] * Columns
+        Data.append(r)
+
+    return Data
+
+
+
+
 
 #fuente
 font = pygame.font.SysFont('Futura', 30)
@@ -104,6 +139,23 @@ WHITE = (255,255,255)
 RED = (255,0,0)
 BLACK = (0,0,0)
 GREEN = (0,255,0)
+
+#botones centrados segun screen heigh y width
+start_button = button.Button(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 - 200, boton_start, 1)
+exit_button = button.Button(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 + 100, boton_exit, 1)
+editor_button = button.Button(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 - 50, boton_editor, 1)
+restart_button = button.Button(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 - 50, boton_editor, 1)
+#grupos de sprite
+grupo_balas = pygame.sprite.Group()
+grupo_granadas = pygame.sprite.Group()
+grupo_explosiones = pygame.sprite.Group()
+grupo_enemigos = pygame.sprite.Group()
+grupo_item_list = pygame.sprite.Group() 
+grupo_deco = pygame.sprite.Group()
+grupo_agua = pygame.sprite.Group()
+grupo_salida = pygame.sprite.Group()
+grupo_spikes = pygame.sprite.Group()
+grupo_lava = pygame.sprite.Group()
 
 #clase item
 class item(pygame.sprite.Sprite):
@@ -329,22 +381,6 @@ class Explosiones(pygame.sprite.Sprite):
             else:
                 self.image = self.images[self.index]
 
-    
-
-
-#grupos de sprite
-grupo_balas = pygame.sprite.Group()
-grupo_granadas = pygame.sprite.Group()
-grupo_explosiones = pygame.sprite.Group()
-grupo_enemigos = pygame.sprite.Group()
-grupo_item_list = pygame.sprite.Group() 
-grupo_deco = pygame.sprite.Group()
-grupo_agua = pygame.sprite.Group()
-grupo_salida = pygame.sprite.Group()
-grupo_spikes = pygame.sprite.Group()
-grupo_lava = pygame.sprite.Group()
-
-
 
 #clase jugador
 class Entity(pygame.sprite.Sprite):
@@ -434,7 +470,7 @@ class Entity(pygame.sprite.Sprite):
         dy += self.vel_y  
 
         
-#chequear colisiones
+        #chequear colisiones
         for tile in mundo.list_obstacl:
             #colisiones en x
             if tile[1].colliderect(self.rect.x + dx, self.rect.y, self.rect.width, self.rect.height):
@@ -470,9 +506,14 @@ class Entity(pygame.sprite.Sprite):
                 or (self.rect.left < SCROLL_THRESH and bg_scroll > abs(dx)):
                 self.rect.x -= dx
                 Screen_scroll = -dx
+
+        #colision con salida
+        level_complete = False
+        if pygame.sprite.spritecollide(self, grupo_salida, False):
+            level_complete = True
                 
 
-        return Screen_scroll
+        return Screen_scroll, level_complete
 
 
     def disparar(self):
@@ -662,6 +703,10 @@ with open(f'./level{Level}_data.csv', newline='') as csvfile:
 mundo = Mundo()
 J1 , BarraVid = mundo.procesar_mundo(mundo_DTA)
 
+
+
+
+
 #gameloop
 running = True
 while running:
@@ -669,7 +714,16 @@ while running:
     clock.tick(FPS)
     if start_game == False:
         ventana.fill((18, 55, 42))
-        pass
+        #botones
+        if start_button.draw(ventana):
+            start_game = True
+    
+        if exit_button.draw(ventana):
+            running = False
+
+        if editor_button.draw(ventana):
+            #iniciar el level editor
+            subprocess.call('python LevelEditor.py', shell=True)
     else:
         draw_bg()
 
@@ -740,9 +794,41 @@ while running:
             else:
                 J1.update_accion(0)
 
-            screen_scroll = J1.move(moviendose_izq, moviendose_der)
+            screen_scroll, level_complete = J1.move(moviendose_izq, moviendose_der)
             bg_scroll -= screen_scroll
             J1.update_animation()  # Update animation.
+
+            if level_complete:
+                Level += 1
+                bg_scroll = 0
+                mundo_DTA = reset_level()
+                if Level <= NMAX_NIV:
+                    #cargar nivel y crear mundo
+                    with open(f'./level{Level}_data.csv', newline='') as csvfile:
+                        reader = csv.reader(csvfile, delimiter=',')
+                        for x, row in enumerate(reader):
+                            for y, tile in enumerate(row):
+                                mundo_DTA[x][y] = int(tile)
+
+                    mundo = Mundo()
+                    J1 , BarraVid = mundo.procesar_mundo(mundo_DTA)
+        else:
+            screen_scroll = 0
+            if restart_button.draw(ventana):
+                bg_scroll = 0
+                mundo_DTA = reset_level()
+                #cargar nivel y crear mundo
+                with open(f'./level{Level}_data.csv', newline='') as csvfile:
+                    reader = csv.reader(csvfile, delimiter=',')
+                    for x, row in enumerate(reader):
+                        for y, tile in enumerate(row):
+                            mundo_DTA[x][y] = int(tile)
+
+                mundo = Mundo()
+                J1 , BarraVid = mundo.procesar_mundo(mundo_DTA)
+
+
+
 
 
 
