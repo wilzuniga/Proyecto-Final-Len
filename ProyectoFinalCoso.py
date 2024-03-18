@@ -1,4 +1,5 @@
 import pygame
+from pygame import mixer
 import os
 import csv
 import button
@@ -9,9 +10,10 @@ import random
 script_dir = os.path.dirname(os.path.abspath(__file__))
 os.chdir(script_dir)
 
+mixer.init()
 pygame.init()
 
-#set cuadros por segundo
+#set cuadros por segundodw
 clock = pygame.time.Clock()
 FPS = 60
 
@@ -25,7 +27,7 @@ Rows = 16
 Columns = 150
 NMAX_NIV = 3
 TILE_SZ = SCREEN_HEIGHT // Rows
-Tyle_types = 65
+Tyle_types = 67
 Level = 0
 screen_scroll = 0
 SCROLL_THRESH = 200
@@ -36,7 +38,7 @@ start_game = False
 #ventana
 ventana = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
-degustadores = ['Kevin' , 'Walther' , 'Emiliano', 'Alberth']
+degustadores = ['Kevin' , 'Walther' , 'Emiliano', 'Alberth' , 'Wilmer']
 #numero random de 0 a 3
 randoms = random.randint(0, 3)
 pygame.display.set_caption('Comete un pene ' + degustadores[randoms])
@@ -48,13 +50,35 @@ disparando = False
 grenade = False
 Gran_Lanzada = False
 
+#musica y sonidos
+pygame.mixer.music.load('./Audio/music.mp3')
+pygame.mixer.music.set_volume(0.05)
+pygame.mixer.music.play(-1, 0.0, 5000)
+daño_fx = pygame.mixer.Sound('./Audio/Auch.mp3')
+daño_fx.set_volume(0.05)
+
+granada_fx = pygame.mixer.Sound('./Audio/Boom.mp3')
+granada_fx.set_volume(0.2)
+
+disparo_fx = pygame.mixer.Sound('./Audio/Pew.mp3')
+disparo_fx.set_volume(0.15)
+
+muerte_fx = pygame.mixer.Sound('./Audio/Muerte.mp3')
+muerte_fx.set_volume(0.05)
+
+cuchillo_fx = pygame.mixer.Sound('./Audio/Cuchillo.mp3')
+cuchillo_fx.set_volume(0.1)
+
+
 #imagenes botones
 boton_start = pygame.image.load('./img/start_btn.png').convert_alpha()
 boton_start = pygame.transform.scale(boton_start, (200, 100))
-boton_editor = pygame.image.load('./img/restart_btn.png').convert_alpha()
+boton_editor = pygame.image.load('./img/lvled_btn.png').convert_alpha()
 boton_editor = pygame.transform.scale(boton_editor, (200, 100))
 boton_exit = pygame.image.load('./img/exit_btn.png').convert_alpha()
 boton_exit = pygame.transform.scale(boton_exit, (200, 100))
+boton_restart = pygame.image.load('./img/restart_btn.png').convert_alpha()
+boton_restart = pygame.transform.scale(boton_restart, (200, 100))
 #cargar imagenes
 bg_one = pygame.image.load('./img/Background/plx-1.png').convert_alpha()
 bg_two = pygame.image.load('./img/Background/plx-2.png').convert_alpha()
@@ -69,17 +93,20 @@ for x in range(Tyle_types):
     img_list.append(img)
 #balas
 bullet_img = pygame.image.load('./img/icons/bullet.png').convert_alpha()  #cambiar por la imagen de la bala
+cuchillo_imgg = pygame.image.load('./img/icons/knife.png').convert_alpha()
 #granadas
 grenade_img = pygame.image.load('./img/icons/grenade.png').convert_alpha()  
 #items
 salud_img = pygame.image.load('./img/icons/health_box.png').convert_alpha() 
 municion_img = pygame.image.load('./img/icons/ammo_box.png').convert_alpha() 
 granadas_img = pygame.image.load('./img/icons/grenade_box.png').convert_alpha() 
+cuchillo_img = pygame.image.load('./img/icons/knife (2).png').convert_alpha()
 
 item_list = {
     'Salud'    : salud_img,
     'Municion'  : municion_img,
-    'Granada'  : granadas_img
+    'Granada'  : granadas_img,
+    'Cuchillo' : cuchillo_img
 }
 
 
@@ -144,7 +171,7 @@ GREEN = (0,255,0)
 start_button = button.Button(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 - 200, boton_start, 1)
 exit_button = button.Button(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 + 100, boton_exit, 1)
 editor_button = button.Button(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 - 50, boton_editor, 1)
-restart_button = button.Button(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 - 50, boton_editor, 1)
+restart_button = button.Button(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 - 50, boton_restart, 1)
 #grupos de sprite
 grupo_balas = pygame.sprite.Group()
 grupo_granadas = pygame.sprite.Group()
@@ -178,6 +205,9 @@ class item(pygame.sprite.Sprite):
                 J1.mun += 10
             elif self.item_type == 'Granada':
                 J1.granad += 2
+            elif self.item_type == 'Cuchillo':
+                J1.cuchillo = True
+                cuchillo_fx.play()
 
             #borrar
             self.kill()
@@ -226,6 +256,7 @@ class Lava(pygame.sprite.Sprite):
         #hacer daño luego de cierto tiempo
         if pygame.sprite.collide_rect(self, J1):
             J1.salud -= 0.5
+            daño_fx.play()
 
 class spikes(pygame.sprite.Sprite):
     def __init__(self, img, x, y):
@@ -239,6 +270,7 @@ class spikes(pygame.sprite.Sprite):
         #hacer daño si se toca
         if pygame.sprite.collide_rect(self, J1):
             J1.salud -= 0.5
+            daño_fx.play()
 
 
 
@@ -281,12 +313,40 @@ class balas(pygame.sprite.Sprite):
         if pygame.sprite.spritecollide(J1, grupo_balas, False):
             if J1.vive:
                 J1.salud -= 25
+                daño_fx.play()
                 self.kill()
 
         for enemig in grupo_enemigos:
             if pygame.sprite.spritecollide(enemig, grupo_balas, False):
                 if enemig.vive:
                     enemig.salud -= 25
+                    self.kill()
+
+
+class Cuchillo(pygame.sprite.Sprite):
+    def __init__(self, x, y, direction):
+        pygame.sprite.Sprite.__init__(self)
+        self.speed = 12
+        self.image = cuchillo_imgg
+        self.rect = self.image.get_rect()
+        self.rect.center = (x, y)
+        self.direction = direction
+
+    def update(self):
+        #mover la bala
+        self.rect.x += (self.direction * self.speed) + screen_scroll
+        #chequear si la bala sale de la pantalla
+        if self.rect.right < 0 or self.rect.left > SCREEN_WIDTH:
+            self.kill()
+        #colision con nivel
+        for tile in mundo.list_obstacl:
+            if tile[1].colliderect(self.rect):
+                self.kill()
+
+        for enemig in grupo_enemigos:
+            if pygame.sprite.spritecollide(enemig, grupo_balas, False):
+                if enemig.vive:
+                    enemig.salud -= 100
                     self.kill()
 
         
@@ -341,6 +401,7 @@ class BOOMgran(pygame.sprite.Sprite):
             self.kill()
             explosion = Explosiones(self.rect.x, self.rect.y, 3)
             grupo_explosiones.add(explosion)
+            granada_fx.play()
             #daño por explosion
             if abs(self.rect.centerx - J1.rect.centerx) < TILE_SZ * 2 and\
                 abs(self.rect.centery - J1.rect.centery) < TILE_SZ * 2:
@@ -393,6 +454,7 @@ class Entity(pygame.sprite.Sprite):
         self.espera = 0
         self.granad = granad
         self.granad_inc = granad
+        self.cuchillo = False
         self.salud = 100
         self.sal_max = self.salud
         self.char_type = char_type
@@ -522,12 +584,20 @@ class Entity(pygame.sprite.Sprite):
             balaa = balas(self.rect.centerx + (0.75 * self.rect.size[0] * self.direccion), self.rect.centery, self.direccion)
             grupo_balas.add(balaa)  
             self.mun -= 1
+            disparo_fx.play()
+
+    def lanzar_cuchillo(self):  
+        if self.cuchillo == True:
+            cuchillo = Cuchillo(self.rect.centerx + (0.75 * self.rect.size[0] * self.direccion), self.rect.centery, self.direccion)
+            grupo_balas.add(cuchillo)
+            self.cuchillo = False
 
     #verificar si cayo del suelo del mundo
     def verif_caido(self):
         if self.rect.bottom > SCREEN_HEIGHT + 5:
             self.vive = False
             self.update_accion(3)
+            
       
         
     
@@ -560,7 +630,7 @@ class Entity(pygame.sprite.Sprite):
             self.salud = 0
             self.vel = 0
             self.vive = False
-            self.update_accion(3)
+            self.update_accion(3)#muerte
 
     def controlenemigos(self):
         if self.vive and J1.vive:
@@ -651,6 +721,9 @@ class Mundo():
                     elif tile == 23:#crear caja de salud
                         item_box = item('Salud', x * TILE_SZ, y * TILE_SZ)
                         grupo_item_list.add(item_box)
+                    elif tile == 66:#crear cuchillo
+                        item_box = item('Cuchillo', x * TILE_SZ, y * TILE_SZ)
+                        grupo_item_list.add(item_box)
                     elif tile == 24:#crear salida
                         salida = Salida(img, x * TILE_SZ, y * TILE_SZ)
                         grupo_salida.add(salida)
@@ -694,7 +767,7 @@ for row in range(Rows):
     mundo_DTA.append(r)
 
 #cargar nivel y crear mundo
-with open(f'./level{Level}_data.csv', newline='') as csvfile:
+with open(f'./levels/level{Level}_data.csv', newline='') as csvfile:
     reader = csv.reader(csvfile, delimiter=',')
     for x, row in enumerate(reader):
         for y, tile in enumerate(row):
@@ -786,7 +859,6 @@ while running:
                 grupo_granadas.add(granada)
                 Gran_Lanzada = True
                 J1.granad -= 1
-
             if J1.saltando:
                 J1.update_accion(2)  # 2 is for jumping.
             elif moviendose_izq or moviendose_der:
@@ -804,7 +876,7 @@ while running:
                 mundo_DTA = reset_level()
                 if Level <= NMAX_NIV:
                     #cargar nivel y crear mundo
-                    with open(f'./level{Level}_data.csv', newline='') as csvfile:
+                    with open(f'./levels/level{Level}_data.csv', newline='') as csvfile:
                         reader = csv.reader(csvfile, delimiter=',')
                         for x, row in enumerate(reader):
                             for y, tile in enumerate(row):
@@ -815,10 +887,11 @@ while running:
         else:
             screen_scroll = 0
             if restart_button.draw(ventana):
+                print('reiniciando')
                 bg_scroll = 0
                 mundo_DTA = reset_level()
                 #cargar nivel y crear mundo
-                with open(f'./level{Level}_data.csv', newline='') as csvfile:
+                with open(f'./levels/level{Level}_data.csv', newline='') as csvfile:
                     reader = csv.reader(csvfile, delimiter=',')
                     for x, row in enumerate(reader):
                         for y, tile in enumerate(row):
@@ -851,6 +924,8 @@ while running:
                 J1.salto = True
             if event.key == pygame.K_ESCAPE:
                 running = False
+            if event.key == pygame.K_e:
+                J1.lanzar_cuchillo()
 
         #releases de teclado
         if event.type == pygame.KEYUP:
@@ -863,6 +938,8 @@ while running:
             if event.key == pygame.K_q:
                 grenade = False
                 Gran_Lanzada = False
+            if event.key == pygame.K_e:
+                J1.cuchillo = False
              
             
 
