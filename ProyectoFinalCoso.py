@@ -240,7 +240,11 @@ class Agua(pygame.sprite.Sprite):
 
     def update(self):
         self.rect.x += screen_scroll
-        #si se toca el agua, el jugador muere
+        if pygame.sprite.collide_rect(J1, self):
+            if J1.rect.bottom >= (self.rect.top + (self.rect.height / 2)):
+                J1.vel = 2
+            else:
+                J1.vel = 5
         
 
 
@@ -254,9 +258,13 @@ class Lava(pygame.sprite.Sprite):
     def update(self):
         self.rect.x += screen_scroll
         #hacer daño luego de cierto tiempo
-        if pygame.sprite.collide_rect(self, J1):
+        if pygame.sprite.collide_rect(J1, self):
             J1.salud -= 0.5
-            daño_fx.play()
+            if J1.rect.bottom >= self.rect.top + (self.rect.height / 2):
+                J1.vel = 0.6
+                J1.salud -= 0.7
+            else:
+                J1.vel = 5
 
 class spikes(pygame.sprite.Sprite):
     def __init__(self, img, x, y):
@@ -484,7 +492,7 @@ class Entity(pygame.sprite.Sprite):
             framesencarpeta = len(os.listdir(f'./img/{self.char_type}/{tipo}'))
             for i in range(framesencarpeta):
                 img = pygame.image.load(f'./img/{self.char_type}/{tipo}/{i}.png').convert_alpha()
-                img = pygame.transform.scale(img, (img.get_width() * escala, img.get_height() * escala))
+                img = pygame.transform.scale(img, (36, img.get_height() * escala -10))
                 list_temp.append(img)
             self.animation_list.append(list_temp)
 
@@ -740,7 +748,7 @@ class Mundo():
                         self.list_obstacl.append(tile_data)
 
                     elif tile == 19:#crear jugador
-                        J1 = Entity(x * TILE_SZ, y * TILE_SZ, 1.65, 'player', 5, 20, 5)
+                        J1 = Entity(x * TILE_SZ, y * TILE_SZ, 1.65, 'player', 5, 0, 0)
                         BarraVid = BarraVida(10, 10, J1.salud, J1.sal_max)
                     elif tile == 20:#crear enemigos
                         enemig = Entity(x * TILE_SZ, y * TILE_SZ, 1.65, 'enemy', 2, 20, 0)
@@ -814,16 +822,6 @@ while running:
         #actualizar y dibujar mundo
         mundo.draw()
 
-
-
-        for enemig in grupo_enemigos:
-            enemig.controlenemigos()
-            enemig.draw()
-            enemig.update()
-        J1.draw()
-        J1.update()
-
-
         #actualizar y dibujar los grupos
         # Updates
         grupo_balas.update()
@@ -833,21 +831,29 @@ while running:
         grupo_deco.update()
         grupo_salida.update()
         grupo_agua.update()
-        grupo_spikes.update()
-        
+        grupo_spikes.update()        
         grupo_lava.update()
 
-        # Draws
+        #Draws que van detrás del Jugador
+        grupo_deco.draw(ventana)
         grupo_balas.draw(ventana)
         grupo_granadas.draw(ventana)
         grupo_explosiones.draw(ventana)
         grupo_item_list.draw(ventana)
         grupo_salida.draw(ventana)
+
+        #Dibujar Jugador
+        for enemig in grupo_enemigos:
+            enemig.controlenemigos()
+            enemig.draw()
+            enemig.update()
+        J1.draw()
+        J1.update()
+
+        #Draws que van en frente del Jugador
         grupo_agua.draw(ventana)
         grupo_spikes.draw(ventana)
         grupo_lava.draw(ventana)
-        grupo_deco.draw(ventana)
-
 
         #actualizar acciones jugador 
         if J1.vive:
