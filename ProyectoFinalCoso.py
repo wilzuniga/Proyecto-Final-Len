@@ -33,6 +33,14 @@ screen_scroll = 0
 SCROLL_THRESH = 200
 bg_scroll = 0
 start_game = False
+start_intro = False
+
+#variables de jugador
+munin = 0
+granadin = 0
+salin = 0
+
+
 
 
 #ventana
@@ -41,7 +49,7 @@ ventana = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 degustadores = ['Kevin' , 'Walther' , 'Emiliano', 'Alberth' , 'Wilmer']
 #numero random de 0 a 3
 randoms = random.randint(0, 3)
-pygame.display.set_caption('Comete un pene ' + degustadores[randoms])
+pygame.display.set_caption('La aventura de ' + degustadores[randoms])
 
 #variables de accion
 moviendose_izq = False
@@ -165,6 +173,7 @@ font = pygame.font.SysFont('Futura', 30)
 WHITE = (255,255,255)
 RED = (255,0,0)
 BLACK = (0,0,0)
+PINK = (255,200,200)
 GREEN = (0,255,0)
 
 #botones centrados segun screen heigh y width
@@ -482,6 +491,10 @@ class Entity(pygame.sprite.Sprite):
         self.endescanso_counter = 0
         self.campo_vision = pygame.Rect(0, 0, 150, 20)
 
+        self.munin = 0
+        self.granadin = 0
+        self.salin = 0
+
 
         #recargar imagenes
         tiposAnimaciones = ['Idle', 'Run', 'Jump', 'Death']
@@ -581,8 +594,8 @@ class Entity(pygame.sprite.Sprite):
         level_complete = False
         if pygame.sprite.spritecollide(self, grupo_salida, False):
             level_complete = True
-                
 
+            
         return Screen_scroll, level_complete
 
 
@@ -679,6 +692,36 @@ class Entity(pygame.sprite.Sprite):
     def draw(self):
         ventana.blit(pygame.transform.flip(self.image, self.flip, False), self.rect) 
 
+class ScreenFade():
+	def __init__(self, direction, colour, speed):
+		self.direction = direction
+		self.colour = colour
+		self.speed = speed
+		self.fade_counter = 0
+
+
+	def fade(self):
+		fade_complete = False
+		self.fade_counter += self.speed
+		if self.direction == 1:#whole screen fade
+			pygame.draw.rect(ventana, self.colour, (0 - self.fade_counter, 0, SCREEN_WIDTH // 2, SCREEN_HEIGHT))
+			pygame.draw.rect(ventana, self.colour, (SCREEN_WIDTH // 2 + self.fade_counter, 0, SCREEN_WIDTH, SCREEN_HEIGHT))
+			pygame.draw.rect(ventana, self.colour, (0, 0 - self.fade_counter, SCREEN_WIDTH, SCREEN_HEIGHT // 2))
+			pygame.draw.rect(ventana, self.colour, (0, SCREEN_HEIGHT // 2 +self.fade_counter, SCREEN_WIDTH, SCREEN_HEIGHT))
+		if self.direction == 2:#vertical screen fade down
+			pygame.draw.rect(ventana, self.colour, (0, 0, SCREEN_WIDTH, 0 + self.fade_counter))
+		if self.fade_counter >= SCREEN_WIDTH:
+			fade_complete = True
+
+		return fade_complete
+
+
+#create screen fades
+intro_fade = ScreenFade(1, BLACK, 4)
+death_fade = ScreenFade(2, PINK, 4)
+
+
+
 class Decoracion(pygame.sprite.Sprite):
     def __init__(self, img, x, y):
         pygame.sprite.Sprite.__init__(self)
@@ -747,9 +790,14 @@ class Mundo():
                         tile_data = ((img), pygame.Rect(x * TILE_SZ, (y+1) * TILE_SZ, TILE_SZ, TILE_SZ))  
                         self.list_obstacl.append(tile_data)
 
-                    elif tile == 19:#crear jugador
-                        J1 = Entity(x * TILE_SZ, y * TILE_SZ, 1.65, 'player', 5, 0, 0)
-                        BarraVid = BarraVida(10, 10, J1.salud, J1.sal_max)
+                    elif tile == 19:#crear jugador    
+                        if Level > 0:
+                            J1 = Entity(x * TILE_SZ, y * TILE_SZ, 1.65, 'player', 10, munin, granadin)
+                            J1.salud = salin
+                            BarraVid = BarraVida(10, 10, J1.salud, J1.sal_max)
+                        else:
+                            J1 = Entity(x * TILE_SZ, y * TILE_SZ, 1.65, 'player', 10, 30, 5)
+                            BarraVid = BarraVida(10, 10, J1.salud, J1.sal_max)
                     elif tile == 20:#crear enemigos
                         enemig = Entity(x * TILE_SZ, y * TILE_SZ, 1.65, 'enemy', 2, 20, 0)
                         grupo_enemigos.add(enemig)
@@ -798,7 +846,8 @@ while running:
         #botones
         if start_button.draw(ventana):
             start_game = True
-    
+            start_intro = True
+
         if exit_button.draw(ventana):
             running = False
 
@@ -855,6 +904,11 @@ while running:
         grupo_spikes.draw(ventana)
         grupo_lava.draw(ventana)
 
+        if start_intro == True:
+            if intro_fade.fade():
+                start_intro = False
+                intro_fade.fade_counter = 0
+
         #actualizar acciones jugador 
         if J1.vive:
             if disparando:
@@ -877,6 +931,11 @@ while running:
             J1.update_animation()  # Update animation.
 
             if level_complete:
+                start_intro = True
+                munin = J1.mun
+                granadin = J1.granad
+                salin = J1.salud
+
                 Level += 1
                 bg_scroll = 0
                 mundo_DTA = reset_level()
@@ -892,19 +951,21 @@ while running:
                     J1 , BarraVid = mundo.procesar_mundo(mundo_DTA)
         else:
             screen_scroll = 0
-            if restart_button.draw(ventana):
-                print('reiniciando')
-                bg_scroll = 0
-                mundo_DTA = reset_level()
-                #cargar nivel y crear mundo
-                with open(f'./levels/level{Level}_data.csv', newline='') as csvfile:
-                    reader = csv.reader(csvfile, delimiter=',')
-                    for x, row in enumerate(reader):
-                        for y, tile in enumerate(row):
-                            mundo_DTA[x][y] = int(tile)
+            if death_fade.fade():
+                if restart_button.draw(ventana):
+                    death_fade.fade_counter = 0
+                    start_intro = True
+                    bg_scroll = 0
+                    mundo_DTA = reset_level()
+                    #cargar nivel y crear mundo
+                    with open(f'./levels/level{Level}_data.csv', newline='') as csvfile:
+                        reader = csv.reader(csvfile, delimiter=',')
+                        for x, row in enumerate(reader):
+                            for y, tile in enumerate(row):
+                                mundo_DTA[x][y] = int(tile)
 
-                mundo = Mundo()
-                J1 , BarraVid = mundo.procesar_mundo(mundo_DTA)
+                    mundo = Mundo()
+                    J1 , BarraVid = mundo.procesar_mundo(mundo_DTA)
 
 
 
