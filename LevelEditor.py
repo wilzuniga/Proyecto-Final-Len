@@ -34,14 +34,14 @@ scroll = 0
 scroll_speed = 1
 
 
-#load images
+#Load Fondo parallax
 one = pygame.image.load('./img/Background/plx-1.png').convert_alpha()
 two = pygame.image.load('./img/Background/plx-2.png').convert_alpha()
 three = pygame.image.load('./img/Background/plx-3.png').convert_alpha()
 four = pygame.image.load('./img/Background/plx-4.png').convert_alpha()
 five = pygame.image.load('./img/Background/plx-5.png').convert_alpha()
 
-#almacenar imagenes en una lista
+#Almacenar imagenes de tiles en una lista
 img_list = []
 for x in range(TILE_TYPES):
 	img = pygame.image.load(f'./img/tile/{x}.png').convert_alpha()
@@ -51,19 +51,12 @@ for x in range(TILE_TYPES):
 save_img = pygame.image.load('./img/save_btn.png').convert_alpha()
 load_img = pygame.image.load('./img/load_btn.png').convert_alpha()
 
-
-#Querido emiliano, si estas leyendo esto es porque sos grande, no se como se dice 
-#te amo en aleman, pero supongo que se dice ich amech porque ich es yo 
-#eniweis, ponete a hacer niveles a lo pendejo mi rey 
-#animo
-#lo amo, besitos
-
 #Colorin colorado
 FOREST_GREEN = (0, 92, 67)
 WHITE = (255, 255, 255)
 RED = (200, 25, 25)
 
-#define font
+#Definir fuente
 font = pygame.font.SysFont('Futura', 30)
 
 #Matriz de nivel vacia
@@ -76,14 +69,13 @@ for row in range(ROWS):
 for tile in range(0, MAX_COLS):
 	world_data[ROWS - 1][tile] = 0
 
-
 #Texto en pantalla
 def draw_text(text, font, text_col, x, y):
 	img = font.render(text, True, text_col)
 	screen.blit(img, (x, y))
 
 
-#fondito de bosque 
+#Fondo de bosque 
 def draw_bg():
 	screen.fill(FOREST_GREEN)
 	width = one.get_width()
@@ -96,29 +88,28 @@ def draw_bg():
 		screen.blit(pygame.transform.scale(five, (int(width * scale), SCREEN_HEIGHT)), (x * width * scale - scroll * 0.9, 0))
 
 
-#grid 
+#Grid 
 def draw_grid():
-	#vertical lines
+	#Lineas Verticales
 	for c in range(MAX_COLS + 1):
 		pygame.draw.line(screen, WHITE, (c * TILE_SIZE - scroll, 0), (c * TILE_SIZE - scroll, SCREEN_HEIGHT))
-	#horizontal lines
+	#Lineas Horizontales
 	for c in range(ROWS + 1):
 		pygame.draw.line(screen, WHITE, (0, c * TILE_SIZE), (SCREEN_WIDTH, c * TILE_SIZE))
 
 
-#dibujar el mundo
+#Dibujar mundo (colocando lo que abarca cada espacio de matriz)
 def draw_world():
 	for y, row in enumerate(world_data):
 		for x, tile in enumerate(row):
 			if tile >= 0:
 				screen.blit(img_list[tile], (x * TILE_SIZE - scroll, y * TILE_SIZE))
 
-
-
-#crear buttons
+#Crear botones (save, load)
 save_button = button.Button(SCREEN_WIDTH , SCREEN_HEIGHT + LOWER_MARGIN - 50, save_img, 1)
 load_button = button.Button(SCREEN_WIDTH  + 200, SCREEN_HEIGHT + LOWER_MARGIN - 50, load_img, 1)
-#lista de botones
+
+#Lista botones de tiles
 button_list = []
 button_col = 0
 button_row = 0
@@ -131,10 +122,9 @@ for i in range(len(img_list)):
 		button_row += 1
 		button_col = 0
 
-
+#Correr Juego
 run = True
 while run:
-
 	clock.tick(FPS)
 
 	draw_bg()
@@ -144,16 +134,16 @@ while run:
 	draw_text(f'Nivel: {level}', font, WHITE, 10, SCREEN_HEIGHT + LOWER_MARGIN - 90)
 	draw_text('ARRIBA o ABAJO para cambiar de nivel', font, WHITE, 10, SCREEN_HEIGHT + LOWER_MARGIN - 60)
 
-	#save and load data
+	#Save and load data
 	if save_button.draw(screen):
-		#save level data
+		#Save level data
 		with open(f'./levels/level{level}_data.csv', 'w', newline='') as csvfile:
 			writer = csv.writer(csvfile, delimiter = ',')
 			for row in world_data:
 				writer.writerow(row)
 		
 	if load_button.draw(screen):
-		#resetear al inicio del nivl
+		#Resetear al inicio del nivel
 		scroll = 0
 		with open(f'./levels/level{level}_data.csv', newline='') as csvfile:
 			reader = csv.reader(csvfile, delimiter = ',')
@@ -162,44 +152,44 @@ while run:
 					world_data[x][y] = int(tile)
 
 
-	#dibujar 
+	#Dibujar fondo del panel de tiles
 	pygame.draw.rect(screen, FOREST_GREEN, (SCREEN_WIDTH, 0, SIDE_MARGIN, SCREEN_HEIGHT))
 
-	#elegir tile
+	#Elegir tile
 	button_count = 0
 	for button_count, i in enumerate(button_list):
 		if i.draw(screen):
 			current_tile = button_count
 
-	#poner en rojo lo seleccionado
+	#Poner en rojo lo seleccionado
 	pygame.draw.rect(screen, RED, button_list[current_tile].rect, 3)
 
-	#scroll del mouse[ARREGLAR BUG CULERO]
+	#Scroll de la pantalla con teclas
 	if scroll_left == True and scroll > 0:
 		scroll -= 5 * scroll_speed
 	if scroll_right == True and scroll < (MAX_COLS * TILE_SIZE) - SCREEN_WIDTH:
 		scroll += 5 * scroll_speed
 
-	#agregar nuevos tiles a la pantalla
-	#posicion del mouse
-	pos = pygame.mouse.get_pos()
+	#Agregar nuevos tiles a la pantalla
+	pos = pygame.mouse.get_pos()#Posicion del mouse en matriz
 	x = (pos[0] + scroll) // TILE_SIZE
 	y = pos[1] // TILE_SIZE
 
-	#revisazr si el mouse esta dentro de la pantalla
+	#Revisar si el mouse esta dentro de la pantalla
 	if pos[0] < SCREEN_WIDTH and pos[1] < SCREEN_HEIGHT:
-		#actualizar el valor de los tiles
-		if pygame.mouse.get_pressed()[0] == 1:
+		#Actualizar valores en la matriz
+		if pygame.mouse.get_pressed()[0] == 1:#Click izquierdo
+			#Actualizar tile en matriz
 			if world_data[y][x] != current_tile:
 				world_data[y][x] = current_tile
-		if pygame.mouse.get_pressed()[2] == 1:
+		if pygame.mouse.get_pressed()[2] == 1:#Click derecho
 			world_data[y][x] = -1
 
-
+	#Inputs de teclado
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
 			run = False
-		#inputs de teclado
+
 		if event.type == pygame.KEYDOWN:
 			if event.key == pygame.K_UP:
 				level += 1
@@ -211,7 +201,6 @@ while run:
 				scroll_right = True
 			if event.key == pygame.K_RSHIFT:
 				scroll_speed = 5
-
 
 		if event.type == pygame.KEYUP:
 			if event.key == pygame.K_LEFT:
@@ -225,4 +214,3 @@ while run:
 	pygame.display.update()
 
 pygame.quit()
-

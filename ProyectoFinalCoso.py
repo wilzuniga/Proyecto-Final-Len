@@ -749,9 +749,11 @@ class Mundo():
                     img_rect.y = y * TILE_SZ
                     tile_data = (img, img_rect)
 
+                    #Tiles con colisión
                     if (tile >= 0 and tile <= 8) or (tile >= 57 and tile <= 61) or (tile == 12 or tile == 13):
                         self.list_obstacl.append(tile_data)
 
+                    #Agua
                     elif tile >= 9 and tile <= 10:#agua
                         agua = Agua(img, x * TILE_SZ, y * TILE_SZ)
                         grupo_agua.add(agua)
@@ -760,9 +762,12 @@ class Mundo():
                         tile_data = ((img), pygame.Rect(x * TILE_SZ, (y+1) * TILE_SZ, TILE_SZ, TILE_SZ))  
                         self.list_obstacl.append(tile_data)
 
+                    #Tiles sin colisión
                     elif (tile >= 14 and tile <= 18) or (tile >= 27 and tile <= 35) or (tile >= 62 and tile <= 64) or (tile >= 40 and tile <= 56) or (tile == 26 or tile == 39) or (tile >=62 and tile <= 64) or (tile == 11):#decoraciones
                         decoracion = Decoracion(img, x * TILE_SZ, y * TILE_SZ)
                         grupo_deco.add(decoracion)
+
+                    #Tiles especiales    
                     elif tile == 21:#crear caja de municion
                         item_box = item('Municion', x * TILE_SZ, y * TILE_SZ)
                         grupo_item_list.add(item_box)
@@ -792,11 +797,11 @@ class Mundo():
 
                     elif tile == 19:#crear jugador    
                         if Level > 0:
-                            J1 = Entity(x * TILE_SZ, y * TILE_SZ, 1.65, 'player', 10, munin, granadin)
+                            J1 = Entity(x * TILE_SZ, y * TILE_SZ, 1.65, 'player', 5, munin, granadin)
                             J1.salud = salin
                             BarraVid = BarraVida(10, 10, J1.salud, J1.sal_max)
                         else:
-                            J1 = Entity(x * TILE_SZ, y * TILE_SZ, 1.65, 'player', 10, 30, 5)
+                            J1 = Entity(x * TILE_SZ, y * TILE_SZ, 1.65, 'player', 5, 30, 5)
                             BarraVid = BarraVida(10, 10, J1.salud, J1.sal_max)
                     elif tile == 20:#crear enemigos
                         enemig = Entity(x * TILE_SZ, y * TILE_SZ, 1.65, 'enemy', 2, 20, 0)
