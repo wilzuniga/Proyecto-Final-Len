@@ -5,6 +5,13 @@ import csv
 import button
 import subprocess
 import random
+import ProyectoFinalCoso
+
+import inspect
+
+clases = inspect.getmembers(ProyectoFinalCoso, inspect.isclass)
+nombres_clases = [nombre for nombre, _ in clases]
+print(nombres_clases)
 
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
