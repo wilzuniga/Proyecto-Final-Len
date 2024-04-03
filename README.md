@@ -39,7 +39,16 @@
 
 ### Créditos
 
-Este juego fue desarrollado por Emiliano Agurcia y Wilmer Zuniga. Con la ayuda de Walther Carrasco, Kevin Banegas y Alberth Godoy.
+Este juego fue desarrollado por:
+
+- Emiliano Agurcia
+- Wilmer Zuniga
+
+Con la ayuda de:
+
+- Walther Carrasco
+- Kevin Banegas
+- Alberth Godoy
 
 
 ---
