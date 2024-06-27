@@ -34,13 +34,16 @@
     ```
 ### Imagenes
 ## Pagina de Inicio
-<span>![</span><span>Imagen de la pagina de inicio del juego</span><span>]</span><span>(</span><span>https://raw.githubusercontent.com/wilzuniga/Shooter-con-Pygame/main/assets/Inicio.png</span><span>)</span>
+![Imagen de la pagina de inicio del juego](https://raw.githubusercontent.com/wilzuniga/Shooter-con-Pygame/main/assets/Inicio.png)
+
+
 
 ## Gameplay
-<span>![</span><span>Imagen de la pagina de inicio del juego</span><span>]</span><span>(</span><span>https://raw.githubusercontent.com/wilzuniga/Shooter-con-Pygame/main/assets/Gameplay.png</span><span>)</span>
+![Imagen del gameplay del Juego](https://raw.githubusercontent.com/wilzuniga/Shooter-con-Pygame/main/assets/Gameplay.png)
 
 ## Editor de Niveles
-<span>![</span><span>Imagen de la pagina de inicio del juego</span><span>]</span><span>(</span><span>https://raw.githubusercontent.com/wilzuniga/Shooter-con-Pygame/main/assets/EditorDeNiveles.png</span><span>)</span>
+![Imagen del editor de niveles del juego](https://raw.githubusercontent.com/wilzuniga/Shooter-con-Pygame/main/assets/EditorDeNiveles.png)
+
 
 
 ### Contribuciones
