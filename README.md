@@ -32,6 +32,16 @@
     ```
     python ProyectoFinalCoso.py
     ```
+### Imagenes
+## Pagina de Inicio
+<span>![</span><span>Imagen de la pagina de inicio del juego</span><span>]</span><span>(</span><span>https://raw.githubusercontent.com/wilzuniga/Shooter-con-Pygame/main/assets/Inicio.png</span><span>)</span>
+
+## Gameplay
+<span>![</span><span>Imagen de la pagina de inicio del juego</span><span>]</span><span>(</span><span>https://raw.githubusercontent.com/wilzuniga/Shooter-con-Pygame/main/assets/Gameplay.png</span><span>)</span>
+
+## Editor de Niveles
+<span>![</span><span>Imagen de la pagina de inicio del juego</span><span>]</span><span>(</span><span>https://raw.githubusercontent.com/wilzuniga/Shooter-con-Pygame/main/assets/EditorDeNiveles.png</span><span>)</span>
+
 
 ### Contribuciones
 
